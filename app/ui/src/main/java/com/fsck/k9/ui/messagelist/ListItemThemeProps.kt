@@ -32,7 +32,6 @@ class ListItemThemeProps(
     val readItemBackgroundColor: Int
     val unreadItemBackgroundColor: Int
 
-    // TODO Check with themeing and properly default colors
     init {
         val array = theme.obtainStyledAttributes(attributes)
 

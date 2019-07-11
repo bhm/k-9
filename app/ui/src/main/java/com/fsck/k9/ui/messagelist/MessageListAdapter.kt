@@ -315,7 +315,6 @@ class MessageListAdapter constructor(
     }
 }
 
-// FIXME move to a separate package once decoupled further.
 class AccountRetriever constructor(
         private val preferences: Preferences
 ) : (Cursor) -> Account {
