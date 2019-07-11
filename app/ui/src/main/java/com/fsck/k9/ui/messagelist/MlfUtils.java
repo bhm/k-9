@@ -1,4 +1,4 @@
-package com.fsck.k9.fragment;
+package com.fsck.k9.ui.messagelist;
 
 
 import java.util.List;
@@ -18,26 +18,26 @@ import com.fsck.k9.mailstore.LocalFolder;
 import com.fsck.k9.mailstore.LocalStore;
 import com.fsck.k9.mailstore.LocalStoreProvider;
 
-import static com.fsck.k9.fragment.MLFProjectionInfo.SENDER_LIST_COLUMN;
+import static com.fsck.k9.ui.messagelist.MLFProjectionInfo.SENDER_LIST_COLUMN;
 
 
 public class MlfUtils {
 
-    static LocalFolder getOpenFolder(String folderServerId, Account account) throws MessagingException {
+    public static LocalFolder getOpenFolder(String folderServerId, Account account) throws MessagingException {
         LocalStore localStore = DI.get(LocalStoreProvider.class).getInstance(account);
         LocalFolder localFolder = localStore.getFolder(folderServerId);
         localFolder.open(Folder.OPEN_MODE_RO);
         return localFolder;
     }
 
-    static void setLastSelectedFolder(Preferences preferences,
+    public static void setLastSelectedFolder(Preferences preferences,
             List<MessageReference> messages, String destFolderName) {
         MessageReference firstMsg = messages.get(0);
         Account account = preferences.getAccount(firstMsg.getAccountUuid());
         account.setLastSelectedFolder(destFolderName);
     }
 
-    static String getSenderAddressFromCursor(Cursor cursor) {
+    public static String getSenderAddressFromCursor(Cursor cursor) {
         String fromList = cursor.getString(SENDER_LIST_COLUMN);
         Address[] fromAddrs = Address.unpack(fromList);
         return (fromAddrs.length > 0) ? fromAddrs[0].getAddress() : null;
