@@ -603,7 +603,7 @@ public class MessageList extends K9Activity implements MessageListFragmentListen
 
     public void openFolderSettings() {
         if (account == null) {
-            Timber.e("Tried to open account settings, but no account selected!");
+            Timber.e("Tried to open account settings, but no account selectedIds!");
             return;
         }
 

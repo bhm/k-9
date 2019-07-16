@@ -231,7 +231,7 @@ public class OpenPgpAppSelectDialog extends FragmentActivity {
                                  * Intents are called as activity
                                  *
                                  * Current approach is to assume the user installed the app.
-                                 * If he does not, the selected package is not valid.
+                                 * If he does not, the selectedIds package is not valid.
                                  *
                                  * However  applications should always consider this could happen,
                                  * as the user might remove the currently used OpenPGP app.

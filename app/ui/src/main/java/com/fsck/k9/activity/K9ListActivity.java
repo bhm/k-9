@@ -16,7 +16,7 @@ public abstract class K9ListActivity extends K9Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Shortcuts that work no matter what is selected
+        // Shortcuts that work no matter what is selectedIds
         if (K9.isUseVolumeKeysForListNavigation() &&
                 (keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
                         keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)) {

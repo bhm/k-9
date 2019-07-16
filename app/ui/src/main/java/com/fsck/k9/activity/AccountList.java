@@ -27,7 +27,7 @@ import com.fsck.k9.search.SearchAccount;
  *
  * <p>
  * Classes extending this abstract class have to provide an {@link #onAccountSelected(BaseAccount)}
- * method to perform an action when an account is selected.
+ * method to perform an action when an account is selectedIds.
  * </p>
  */
 public abstract class AccountList extends K9ListActivity implements OnItemClickListener {
@@ -93,10 +93,10 @@ public abstract class AccountList extends K9ListActivity implements OnItemClickL
     protected abstract boolean displaySpecialAccounts();
 
     /**
-     * This method will be called when an account was selected.
+     * This method will be called when an account was selectedIds.
      *
      * @param account
-     *         The account the user selected.
+     *         The account the user selectedIds.
      */
     protected abstract void onAccountSelected(BaseAccount account);
 

@@ -451,28 +451,28 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
     }
 
     /**
-     * Write the unique IDs of selected messages to a {@link Bundle}.
+     * Write the unique IDs of selectedIds messages to a {@link Bundle}.
      */
     private void saveSelectedMessages(Bundle outState) {
         if (adapter == null) return;
 
-        long[] selected = new long[adapter.getSelected().size()];
+        long[] selected = new long[adapter.getSelectedIds().size()];
         int i = 0;
-        for (Long id : adapter.getSelected()) {
+        for (Long id : adapter.getSelectedIds()) {
             selected[i++] = id;
         }
         outState.putLongArray(STATE_SELECTED_MESSAGES, selected);
     }
 
     /**
-     * Restore selected messages from a {@link Bundle}.
+     * Restore selectedIds messages from a {@link Bundle}.
      */
     private void restoreSelectedMessages(Bundle savedInstanceState) {
         if (adapter == null) return;
         long[] selected = savedInstanceState.getLongArray(STATE_SELECTED_MESSAGES);
         if (selected != null) {
             for (long id : selected) {
-                adapter.getSelected().add(id);
+                adapter.getSelectedIds().add(id);
             }
         }
     }
@@ -1130,7 +1130,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         contextMenuUniqueId = cursor.getLong(adapter.getUniqueIdColumn());
         final Account account = accountRetriever.invoke(cursor);
 
-        if (adapter.getSelected().contains(contextMenuUniqueId)) {
+        if (adapter.getSelectedIds().contains(contextMenuUniqueId)) {
             menu.findItem(R.id.select).setVisible(false);
         } else {
             menu.findItem(R.id.deselect).setVisible(false);
@@ -1371,7 +1371,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
     /**
      * Set selection state for all messages.
      *
-     * @param selected If {@code true} all messages get selected. Otherwise, all messages get deselected and
+     * @param selected If {@code true} all messages get selectedIds. Otherwise, all messages get deselected and
      *                 action mode is finished.
      */
     private void setSelectionState(boolean selected) {
@@ -1385,7 +1385,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
             for (int i = 0, end = adapter.getCount(); i < end; i++) {
                 Cursor cursor = (Cursor) adapter.getItem(i);
                 long uniqueId = cursor.getLong(adapter.getUniqueIdColumn());
-                adapter.getSelected().add(uniqueId);
+                adapter.getSelectedIds().add(uniqueId);
 
                 if (showingThreadedList) {
                     int threadCount = cursor.getInt(THREAD_COUNT_COLUMN);
@@ -1402,7 +1402,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
             updateActionModeTitle();
             computeSelectAllVisibility();
         } else {
-            adapter.getSelected().clear();
+            adapter.getSelectedIds().clear();
             selectedCount = 0;
             if (actionMode != null) {
                 actionMode.finish();
@@ -1433,7 +1433,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         Cursor cursor = (Cursor) adapter.getItem(adapterPosition);
         long uniqueId = cursor.getLong(adapter.getUniqueIdColumn());
 
-        final Set<Long> selected = adapter.getSelected();
+        final Set<Long> selected = adapter.getSelectedIds();
         boolean isSelected = selected.contains(uniqueId);
         if (!isSelected) {
             selected.add(uniqueId);
@@ -1478,7 +1478,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
     }
 
     private void computeSelectAllVisibility() {
-        actionModeCallback.showSelectAll(adapter.getSelected().size() != adapter.getCount());
+        actionModeCallback.showSelectAll(adapter.getSelectedIds().size() != adapter.getCount());
     }
 
     private void computeBatchDirection() {
@@ -1489,7 +1489,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
             Cursor cursor = (Cursor) adapter.getItem(i);
             long uniqueId = cursor.getLong(adapter.getUniqueIdColumn());
 
-            if (adapter.getSelected().contains(uniqueId)) {
+            if (adapter.getSelectedIds().contains(uniqueId)) {
                 boolean read = (cursor.getInt(READ_COLUMN) == 1);
                 boolean flagged = (cursor.getInt(FLAGGED_COLUMN) == 1);
 
@@ -1532,7 +1532,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
     }
 
     private void setFlagForSelected(final Flag flag, final boolean newState) {
-        final Set<Long> selected = adapter.getSelected();
+        final Set<Long> selected = adapter.getSelectedIds();
         if (selected.isEmpty()) {
             return;
         }
@@ -1669,7 +1669,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
             intent.putExtra(ChooseFolder.EXTRA_CUR_FOLDER, sourceFolder);
         }
 
-        // remember the selected messages for #onActivityResult
+        // remember the selectedIds messages for #onActivityResult
         activeMessages = messages;
         startActivityForResult(intent, requestCode);
     }
@@ -1900,7 +1900,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         }
 
         /**
-         * Get the set of account UUIDs for the selected messages.
+         * Get the set of account UUIDs for the selectedIds messages.
          */
         private Set<String> getAccountUuidsForSelected() {
             int maxAccounts = accountUuids.length;
@@ -1910,7 +1910,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
                 Cursor cursor = (Cursor) adapter.getItem(position);
                 long uniqueId = cursor.getLong(adapter.getUniqueIdColumn());
 
-                if (adapter.getSelected().contains(uniqueId)) {
+                if (adapter.getSelectedIds().contains(uniqueId)) {
                     String accountUuid = cursor.getString(ACCOUNT_UUID_COLUMN);
                     accountUuids.add(accountUuid);
 
@@ -1957,7 +1957,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
                 menu.findItem(R.id.move).setVisible(false);
                 menu.findItem(R.id.copy).setVisible(false);
 
-                //TODO: we could support the archive and spam operations if all selected messages
+                //TODO: we could support the archive and spam operations if all selectedIds messages
                 // belong to non-POP3 accounts
                 menu.findItem(R.id.archive).setVisible(false);
                 menu.findItem(R.id.spam).setVisible(false);
@@ -2304,7 +2304,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
     }
 
     private List<MessageReference> getCheckedMessages() {
-        final Set<Long> adapterSelected = adapter.getSelected();
+        final Set<Long> adapterSelected = adapter.getSelectedIds();
         List<MessageReference> messages = new ArrayList<>(adapterSelected.size());
         for (int position = 0, end = adapter.getCount(); position < end; position++) {
             Cursor cursor = (Cursor) adapter.getItem(position);
@@ -2642,7 +2642,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
     }
 
     private void cleanupSelected(Cursor cursor) {
-        final Set<Long> adapterSelected = adapter.getSelected();
+        final Set<Long> adapterSelected = adapter.getSelectedIds();
         if (adapterSelected.isEmpty()) {
             return;
         }
@@ -2656,14 +2656,14 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         }
 
         if (adapter != null)
-            adapter.setSelected(selected);
+            adapter.setSelectedIds(selected);
     }
 
     /**
      * Starts or finishes the action mode when necessary.
      */
     private void resetActionMode() {
-        if (adapter.getSelected().isEmpty()) {
+        if (adapter.getSelectedIds().isEmpty()) {
             if (actionMode != null) {
                 actionMode.finish();
             }
@@ -2691,12 +2691,12 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
      * Recalculates the selection count.
      *
      * <p>
-     * For non-threaded lists this is simply the number of visibly selected messages. If threaded
-     * view is enabled this method counts the number of messages in the selected threads.
+     * For non-threaded lists this is simply the number of visibly selectedIds messages. If threaded
+     * view is enabled this method counts the number of messages in the selectedIds threads.
      * </p>
      */
     private void recalculateSelectionCount() {
-        final Set<Long> adapterSelected = adapter.getSelected();
+        final Set<Long> adapterSelected = adapter.getSelectedIds();
         if (!showingThreadedList) {
             selectedCount = adapterSelected.size();
             return;
@@ -2716,7 +2716,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        adapter.getSelected().clear();
+        adapter.getSelectedIds().clear();
         adapter.swapCursor(null);
     }
 

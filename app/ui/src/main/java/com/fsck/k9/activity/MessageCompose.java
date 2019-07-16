@@ -1488,7 +1488,7 @@ public class MessageCompose extends K9Activity implements OnClickListener,
         } else if (quotedMessagePresenter.isForcePlainText()
                 && quotedMessagePresenter.includeQuotedText()) {
             // Right now we send a text/plain-only message when the quoted text was edited, no
-            // matter what the user selected for the message format.
+            // matter what the user selectedIds for the message format.
             messageFormat = SimpleMessageFormat.TEXT;
         } else if (recipientPresenter.isForceTextMessageFormat()) {
             // Right now we only support PGP inline which doesn't play well with HTML. So force

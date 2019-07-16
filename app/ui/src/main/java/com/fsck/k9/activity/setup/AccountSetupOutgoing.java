@@ -163,7 +163,7 @@ public class AccountSetupOutgoing extends K9Activity implements OnClickListener,
             updateAuthPlainTextFromSecurityType(settings.connectionSecurity);
 
             if (savedInstanceState == null) {
-                // The first item is selected if settings.authenticationType is null or is not in mAuthTypeAdapter
+                // The first item is selectedIds if settings.authenticationType is null or is not in mAuthTypeAdapter
                 mCurrentAuthTypeViewPosition = mAuthTypeAdapter.getAuthPosition(settings.authenticationType);
             } else {
                 mCurrentAuthTypeViewPosition = savedInstanceState.getInt(STATE_AUTH_TYPE_POSITION);

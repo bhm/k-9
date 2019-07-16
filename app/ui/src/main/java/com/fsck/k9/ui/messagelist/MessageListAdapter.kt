@@ -46,7 +46,7 @@ class MessageListAdapter constructor(
 ) : CursorAdapter(context, null, 0) {
 
     var activeMessage: MessageReference? = null
-    var selected: MutableSet<Long> = mutableSetOf()
+    var selectedIds: MutableSet<Long> = mutableSetOf()
     var uniqueIdColumn: Int = 0
 
     private val senderAboveSubject: Boolean get() = K9.isMessageListSenderAboveSubject
@@ -102,6 +102,15 @@ class MessageListAdapter constructor(
 
     override fun bindView(view: View, context: Context, cursor: Cursor) {
         val account = accountRetriever(cursor)
+        val messageListItem = MessageListItem(
+                uniqueIdColumn,
+                cursor,
+                accountRetriever,
+                messageHelper,
+                context,
+                showThreadedList,
+                selectedIds
+        )
 
         val fromList = cursor.getString(SENDER_LIST_COLUMN)
         val toList = cursor.getString(TO_LIST_COLUMN)
@@ -139,7 +148,7 @@ class MessageListAdapter constructor(
         val maybeBoldTypeface = if (read) Typeface.NORMAL else Typeface.BOLD
 
         val uniqueId = cursor.getLong(uniqueIdColumn)
-        val selected = selected.contains(uniqueId)
+        val selected = selectedIds.contains(uniqueId)
 
         holder.chip.setBackgroundColor(account.chipColor)
         if (checkboxes) {
@@ -313,6 +322,72 @@ class MessageListAdapter constructor(
 
         throw AssertionError("Unknown preview type: $previewType")
     }
+}
+
+class MessageListItem(
+        private val uniqueIdColumn: Int,
+        val cursor: Cursor,
+        private val accountRetriever: AccountRetriever,
+        private val messageHelper: MessageHelper,
+        private val context: Context,
+        private val showThreadedList: Boolean,
+        private val selectedIds: Set<Long>
+) {
+
+    val res: Resources get() = context.resources
+    val account get() = accountRetriever(cursor)
+
+    val fromList = cursor.getString(SENDER_LIST_COLUMN)
+    val toList = cursor.getString(TO_LIST_COLUMN)
+    val ccList = cursor.getString(CC_LIST_COLUMN)
+    val fromAddrs = Address.unpack(fromList)
+    val toAddrs = Address.unpack(toList)
+    val ccAddrs = Address.unpack(ccList)
+
+    val fromMe = fromAddrs.contains(account)
+    val toMe = toAddrs.contains(account)
+    val ccMe = ccAddrs.contains(account)
+
+    private inline fun Array<Address>.contains(account: Account): Boolean {
+        return this.any { account.isAnIdentity(it) }
+    }
+
+    val displayName get() = messageHelper.getDisplayName(account, fromAddrs, toAddrs)
+    val displayDate = DateUtils.getRelativeTimeSpanString(context, cursor.getLong(DATE_COLUMN))
+
+    val counterpartyAddress = fetchCounterPartyAddress(fromMe, toAddrs, ccAddrs, fromAddrs)
+
+
+    private fun fetchCounterPartyAddress(
+            fromMe: Boolean,
+            toAddrs: Array<Address>,
+            ccAddrs: Array<Address>,
+            fromAddrs: Array<Address>
+    ): Address? {
+        if (fromMe) {
+            return toAddrs.firstOrNull() ?: ccAddrs.firstOrNull()
+        } else if (fromAddrs.isNotEmpty()) {
+            return fromAddrs[0]
+        }
+        return null
+    }
+
+    val threadCount = if (showThreadedList) cursor.getInt(THREAD_COUNT_COLUMN) else 0
+
+    val subject = MlfUtils.buildSubject(
+            cursor.getString(SUBJECT_COLUMN),
+            res.getString(R.string.general_no_subject),
+            threadCount
+    )
+
+    val read = cursor.getInt(READ_COLUMN) == 1
+    val flagged = cursor.getInt(FLAGGED_COLUMN) == 1
+    val answered = cursor.getInt(ANSWERED_COLUMN) == 1
+    val forwarded = cursor.getInt(FORWARDED_COLUMN) == 1
+
+    val hasAttachments = cursor.getInt(ATTACHMENT_COUNT_COLUMN) > 0
+
+    val isSelected = selectedIds.contains(cursor.getLong(uniqueIdColumn))
 }
 
 class AccountRetriever constructor(

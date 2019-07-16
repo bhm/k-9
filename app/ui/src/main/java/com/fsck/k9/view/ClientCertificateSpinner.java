@@ -101,7 +101,7 @@ public class ClientCertificateSpinner extends LinearLayout {
         KeyChain.choosePrivateKeyAlias(mActivity, new KeyChainAliasCallback() {
             @Override
             public void alias(String alias) {
-                Timber.d("User has selected client certificate alias: %s", alias);
+                Timber.d("User has selectedIds client certificate alias: %s", alias);
 
                 setAlias(alias);
             }

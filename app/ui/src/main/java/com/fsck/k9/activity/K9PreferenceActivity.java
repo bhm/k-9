@@ -109,7 +109,7 @@ public abstract class K9PreferenceActivity extends AppCompatPreferenceActivity i
      *         Sets the human-readable entries to be shown in the list.
      * @param entryValues
      *         The array to find the value to save for a preference when an
-     *         entry from entries is selected.
+     *         entry from entries is selectedIds.
      */
     protected void initListPreference(final ListPreference prefView, final String value,
                                       final CharSequence[] entries, final CharSequence[] entryValues) {
