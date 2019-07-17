@@ -1,6 +1,8 @@
 package com.fsck.k9.fragment;
 
 import android.database.Cursor;
+import com.fsck.k9.ui.messagelist.MLFProjectionInfo;
+import com.fsck.k9.ui.messagelist.MlfUtils;
 
 import java.util.Comparator;
 import java.util.List;
