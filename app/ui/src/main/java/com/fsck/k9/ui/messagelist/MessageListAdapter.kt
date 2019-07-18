@@ -102,7 +102,7 @@ class MessageListAdapter constructor(
 
     override fun bindView(view: View, context: Context, cursor: Cursor) {
         val account = accountRetriever(cursor)
-        val messageListItem = MessageListItem(
+        val extractor = MessageItemDataExtractor(
                 uniqueIdColumn,
                 cursor,
                 accountRetriever,
@@ -123,32 +123,25 @@ class MessageListAdapter constructor(
         val toMe = toAddrs.contains(account)
         val ccMe = ccAddrs.contains(account)
 
-        val displayName = messageHelper.getDisplayName(account, fromAddrs, toAddrs)
-        val displayDate = DateUtils.getRelativeTimeSpanString(context, cursor.getLong(DATE_COLUMN))
+        val displayName = extractor.displayName
+        val displayDate = extractor.displayDate
 
-        val counterpartyAddress = fetchCounterPartyAddress(fromMe, toAddrs, ccAddrs, fromAddrs)
+        val counterpartyAddress = extractor.counterpartyAddress
 
-        val threadCount = if (showThreadedList) cursor.getInt(THREAD_COUNT_COLUMN) else 0
+        val threadCount = extractor.threadCount
 
-        val subject = MlfUtils.buildSubject(
-                cursor.getString(SUBJECT_COLUMN),
-                res.getString(R.string.general_no_subject),
-                threadCount
-        )
+        val subject = extractor.subject
 
-        val read = cursor.getInt(READ_COLUMN) == 1
-        val flagged = cursor.getInt(FLAGGED_COLUMN) == 1
-        val answered = cursor.getInt(ANSWERED_COLUMN) == 1
-        val forwarded = cursor.getInt(FORWARDED_COLUMN) == 1
-
-        val hasAttachments = cursor.getInt(ATTACHMENT_COUNT_COLUMN) > 0
+        val read = extractor.read
+        val flagged = extractor.flagged
+        val answered = extractor.answered
+        val forwarded = extractor.forwarded
 
         val holder = view.tag as MessageViewHolder
 
         val maybeBoldTypeface = if (read) Typeface.NORMAL else Typeface.BOLD
 
-        val uniqueId = cursor.getLong(uniqueIdColumn)
-        val selected = selectedIds.contains(uniqueId)
+        val selected = extractor.isSelected
 
         holder.chip.setBackgroundColor(account.chipColor)
         if (checkboxes) {
@@ -166,7 +159,7 @@ class MessageListAdapter constructor(
         }
         updateWithThreadCount(holder, threadCount)
         val beforePreviewText = if (senderAboveSubject) subject else displayName
-        val sigil = recipientSigil(toMe, ccMe)
+        val sigil = extractor.sigil
         holder.preview.setText(
                 generatePreview(sigil, beforePreviewText, cursor),
                 TextView.BufferType.SPANNABLE
@@ -187,7 +180,7 @@ class MessageListAdapter constructor(
             text = subject
         }
         holder.date.text = displayDate
-        holder.attachment.visibility = if (hasAttachments) View.VISIBLE else View.GONE
+        holder.attachment.visibility = if (extractor.hasAttachments) View.VISIBLE else View.GONE
 
         val statusHolder = buildStatusHolder(forwarded, answered)
         if (statusHolder != null) {
@@ -212,36 +205,14 @@ class MessageListAdapter constructor(
         return messageStringBuilder.toString()
     }
 
-    private fun recipientSigil(toMe: Boolean, ccMe: Boolean): String {
-        return when {
-            toMe -> res.getString(R.string.messagelist_sent_to_me_sigil)
-            ccMe -> res.getString(R.string.messagelist_sent_cc_me_sigil)
-            else -> ""
-        }
-    }
-
-    private fun formatPreviewText(preview: TextView, beforePreviewText: CharSequence, sigil: String) {
+    private fun formatPreviewText(preview: TextView, text: CharSequence, sigil: String) {
         val previewText = preview.text as Spannable
-        previewText.setSpan(senderSpan, 0, beforePreviewText.length + sigil.length,
+        previewText.setSpan(senderSpan, 0, text.length + sigil.length,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         // Set span (color) for preview message
-        previewText.setSpan(ForegroundColorSpan(listItemThemeProps.previewTextColor), beforePreviewText.length + sigil.length,
+        previewText.setSpan(ForegroundColorSpan(listItemThemeProps.previewTextColor), text.length + sigil.length,
                 previewText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-    }
-
-    private fun fetchCounterPartyAddress(
-            fromMe: Boolean,
-            toAddrs: Array<Address>,
-            ccAddrs: Array<Address>,
-            fromAddrs: Array<Address>
-    ): Address? {
-        if (fromMe) {
-            return toAddrs.firstOrNull() ?: ccAddrs.firstOrNull()
-        } else if (fromAddrs.isNotEmpty()) {
-            return fromAddrs[0]
-        }
-        return null
     }
 
     private fun updateContactBadge(holder: MessageViewHolder, counterpartyAddress: Address?) {
@@ -324,7 +295,7 @@ class MessageListAdapter constructor(
     }
 }
 
-class MessageListItem(
+class MessageItemDataExtractor(
         private val uniqueIdColumn: Int,
         val cursor: Cursor,
         private val accountRetriever: AccountRetriever,
@@ -347,6 +318,13 @@ class MessageListItem(
     val fromMe = fromAddrs.contains(account)
     val toMe = toAddrs.contains(account)
     val ccMe = ccAddrs.contains(account)
+
+    val sigil: String
+        get() = when {
+            toMe -> res.getString(R.string.messagelist_sent_to_me_sigil)
+            ccMe -> res.getString(R.string.messagelist_sent_cc_me_sigil)
+            else -> ""
+        }
 
     private inline fun Array<Address>.contains(account: Account): Boolean {
         return this.any { account.isAnIdentity(it) }
