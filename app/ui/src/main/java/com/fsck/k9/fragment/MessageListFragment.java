@@ -60,7 +60,6 @@ import com.fsck.k9.activity.ActivityListener;
 import com.fsck.k9.activity.ChooseFolder;
 import com.fsck.k9.activity.FolderInfoHolder;
 import com.fsck.k9.activity.misc.ContactPicture;
-import com.fsck.k9.contacts.ContactPictureLoader;
 import com.fsck.k9.cache.EmailProviderCache;
 import com.fsck.k9.controller.MessageReference;
 import com.fsck.k9.controller.MessagingController;
@@ -94,6 +93,8 @@ import com.fsck.k9.search.SearchSpecification;
 import com.fsck.k9.search.SearchSpecification.SearchCondition;
 import com.fsck.k9.search.SearchSpecification.SearchField;
 import com.fsck.k9.search.SqlQueryBuilder;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import timber.log.Timber;
 
 import static com.fsck.k9.fragment.MLFProjectionInfo.ACCOUNT_UUID_COLUMN;
@@ -581,13 +582,26 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
                 this.requireContext(),
                 this.requireActivity().getTheme(),
                 this.getResources(),
-                this,
                 LayoutInflater.from(requireContext()),
                 MessageHelper.getInstance(getActivity()),
                 ContactPicture.getContactPictureLoader(),
                 new AccountRetriever(
                         Preferences.getPreferences(this.requireContext().getApplicationContext())
                 ),
+                new Function1<Integer, Unit>() {
+                    @Override
+                    public Unit invoke(Integer position) {
+                        toggleMessageSelectWithAdapterPosition(position);
+                        return Unit.INSTANCE;
+                    }
+                },
+                new Function1<Integer, Unit>() {
+                    @Override
+                    public Unit invoke(Integer position) {
+                        toggleMessageFlagWithAdapterPosition(position);
+                        return Unit.INSTANCE;
+                    }
+                },
                 this.showingThreadedList
         );
 
