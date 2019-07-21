@@ -197,7 +197,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
     private boolean sortDateAscending = false;
 
     private int selectedCount = 0;
-    Set<Long> selected = new HashSet<>();
+    private Set<Long> selected = new HashSet<>();
     private ActionMode actionMode;
     private Boolean hasConnectivity;
     /**
@@ -2673,6 +2673,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         }
 
         this.selected = selected;
+        if (adapter != null) adapter.setSelected(this.selected);
     }
 
     /**
