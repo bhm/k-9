@@ -17,18 +17,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CursorAdapter
 import android.widget.TextView
-
 import com.fsck.k9.Account
 import com.fsck.k9.K9
-import com.fsck.k9.ui.R
 import com.fsck.k9.Preferences
 import com.fsck.k9.contacts.ContactPictureLoader
 import com.fsck.k9.controller.MessageReference
-import com.fsck.k9.helper.MessageHelper
-import com.fsck.k9.mail.Address
-import com.fsck.k9.mailstore.DatabasePreviewType
-import com.fsck.k9.ui.ContactBadge
-
 import com.fsck.k9.fragment.MLFProjectionInfo.ACCOUNT_UUID_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.ANSWERED_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.ATTACHMENT_COUNT_COLUMN
@@ -45,7 +38,12 @@ import com.fsck.k9.fragment.MLFProjectionInfo.SUBJECT_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.THREAD_COUNT_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.TO_LIST_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.UID_COLUMN
-
+import com.fsck.k9.helper.MessageHelper
+import com.fsck.k9.mail.Address
+import com.fsck.k9.mailstore.DatabasePreviewType
+import com.fsck.k9.ui.ContactBadge
+import com.fsck.k9.ui.R
+import com.fsck.k9.ui.messagelist.MessageListAppearance
 import kotlin.math.max
 
 class MessageListAdapter internal constructor(
@@ -57,7 +55,8 @@ class MessageListAdapter internal constructor(
         private val contactsPictureLoader: ContactPictureLoader,
         private val preferences: Preferences,
         private val listItemListener: MessageListItemActionListener,
-        private val showingThreadedList: Boolean = false
+        private val showingThreadedList: Boolean = false,
+        private val appearance: MessageListAppearance
 ) : CursorAdapter(context, null, 0) {
 
     private val forwardedIcon: Drawable
@@ -69,6 +68,7 @@ class MessageListAdapter internal constructor(
     private val readItemBackgroundColor: Int
     private val unreadItemBackgroundColor: Int
     private val fontSizes = K9.fontSizes
+
     init {
 
         val attributes = intArrayOf(R.attr.messageListAnswered, R.attr.messageListForwarded, R.attr.messageListAnsweredForwarded, R.attr.messageListPreviewTextColor, R.attr.messageListActiveItemBackgroundColor, R.attr.messageListSelectedBackgroundColor, R.attr.messageListReadItemBackgroundColor, R.attr.messageListUnreadItemBackgroundColor)
@@ -86,22 +86,6 @@ class MessageListAdapter internal constructor(
 
         array.recycle()
     }
-
-    private val checkboxes: Boolean
-        get() = K9.isShowMessageListCheckboxes
-
-
-    private inline val previewLines: Int
-        get() = K9.messageListPreviewLines
-
-    private val stars: Boolean
-        get() = K9.isShowMessageListStars
-
-    private val senderAboveSubject: Boolean
-        get() = K9.isMessageListSenderAboveSubject
-
-    private val showContactPicture: Boolean
-        get() = K9.isShowContactPicture
 
     var activeMessage: MessageReference? = null
 
@@ -140,13 +124,13 @@ class MessageListAdapter internal constructor(
         holder.flagged = view.findViewById(R.id.star)
 
         val contactBadge = view.findViewById<ContactBadge>(R.id.contact_badge)
-        if (showContactPicture) {
+        if (appearance.showContactPicture) {
             holder.contactBadge = contactBadge
         } else {
             contactBadge.visibility = View.GONE
         }
 
-        if (senderAboveSubject) {
+        if (appearance.senderAboveSubject) {
             holder.from = view.findViewById(R.id.subject)
             fontSizes.setViewTextSize(holder.from, fontSizes.messageListSender)
 
@@ -160,13 +144,14 @@ class MessageListAdapter internal constructor(
 
 
         // 1 preview line is needed even if it is set to 0, because subject is part of the same text view
-        holder.preview.setLines(max(previewLines, 1))
+        holder.preview.setLines(max(appearance.previewLines, 1))
         fontSizes.setViewTextSize(holder.preview, fontSizes.messageListPreview)
         holder.threadCount = view.findViewById(R.id.thread_count)
         fontSizes.setViewTextSize(holder.threadCount, fontSizes.messageListSubject) // thread count is next to subject
-        view.findViewById<View>(R.id.selected_checkbox_wrapper).visibility = if (checkboxes) View.VISIBLE else View.GONE
+        view.findViewById<View>(R.id.selected_checkbox_wrapper).visibility =
+                if (appearance.checkboxes) View.VISIBLE else View.GONE
 
-        holder.flagged.visibility = if (stars) View.VISIBLE else View.GONE
+        holder.flagged.visibility = if (appearance.stars) View.VISIBLE else View.GONE
         holder.flagged.setOnClickListener(holder)
 
 
@@ -218,10 +203,10 @@ class MessageListAdapter internal constructor(
         val selected = selected.contains(uniqueId)
 
         holder.chip.setBackgroundColor(account.chipColor)
-        if (checkboxes) {
+        if (appearance.checkboxes) {
             holder.selected.isChecked = selected
         }
-        if (stars) {
+        if (appearance.stars) {
             holder.flagged.isChecked = flagged
         }
         holder.position = cursor.position
@@ -233,11 +218,11 @@ class MessageListAdapter internal constructor(
             changeBackgroundColorIfActiveMessage(cursor, account, view)
         }
         updateWithThreadCount(holder, threadCount)
-        val beforePreviewText = if (senderAboveSubject) subject else displayName
+        val beforePreviewText = if (appearance.senderAboveSubject) subject else displayName
         val sigil = recipientSigil(toMe, ccMe)
         val messageStringBuilder = SpannableStringBuilder(sigil)
                 .append(beforePreviewText)
-        if (previewLines > 0) {
+        if (appearance.previewLines > 0) {
             val preview = getPreview(cursor)
             messageStringBuilder.append(" ").append(preview)
         }
@@ -247,7 +232,7 @@ class MessageListAdapter internal constructor(
 
         if (holder.from != null) {
             holder.from.typeface = Typeface.create(holder.from.typeface, maybeBoldTypeface)
-            if (senderAboveSubject) {
+            if (appearance.senderAboveSubject) {
                 holder.from.text = displayName
             } else {
                 holder.from.text = SpannableStringBuilder(sigil).append(displayName)
@@ -288,7 +273,7 @@ class MessageListAdapter internal constructor(
      * Create a span section for the sender, and assign the correct font size and weight
      */
     private fun buildSenderSpan(): AbsoluteSizeSpan {
-        val fontSize = if (senderAboveSubject)
+        val fontSize = if (appearance.senderAboveSubject)
             fontSizes.messageListSubject
         else
             fontSizes.messageListSender

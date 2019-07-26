@@ -95,6 +95,7 @@ import com.fsck.k9.search.SearchSpecification.SearchField;
 import com.fsck.k9.search.SqlQueryBuilder;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
+import com.fsck.k9.ui.messagelist.MessageListAppearance;
 import timber.log.Timber;
 
 import static com.fsck.k9.fragment.MLFProjectionInfo.ACCOUNT_UUID_COLUMN;
@@ -587,7 +588,8 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
                 ContactPicture.getContactPictureLoader(),
                 Preferences.getPreferences(this.requireContext().getApplicationContext()),
                 this,
-                this.showingThreadedList
+                this.showingThreadedList,
+                new MessageListAppearance()
         );
 
         if (folderServerId != null) {
@@ -2582,7 +2584,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
             cursor = data;
             uniqueIdColumn = ID_COLUMN;
         }
-        if (adapter != null) adapter.setUniqueIdColumn(uniqueIdColumn);
+        adapter.setUniqueIdColumn(uniqueIdColumn);
 
         if (isThreadDisplay) {
             if (cursor.moveToFirst()) {
