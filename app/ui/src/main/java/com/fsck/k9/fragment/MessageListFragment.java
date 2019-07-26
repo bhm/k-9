@@ -111,7 +111,7 @@ import static com.fsck.k9.fragment.MLFProjectionInfo.UID_COLUMN;
 
 
 public class MessageListFragment extends Fragment implements OnItemClickListener,
-        ConfirmationDialogFragmentListener, LoaderCallbacks<Cursor> {
+        ConfirmationDialogFragmentListener, LoaderCallbacks<Cursor>, MessageListItemActionListener {
 
     public static MessageListFragment newInstance(
             LocalSearch search, boolean isThreadDisplay, boolean threadedList) {
@@ -588,20 +588,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
                 new AccountRetriever(
                         Preferences.getPreferences(this.requireContext().getApplicationContext())
                 ),
-                new Function1<Integer, Unit>() {
-                    @Override
-                    public Unit invoke(Integer position) {
-                        toggleMessageSelectWithAdapterPosition(position);
-                        return Unit.INSTANCE;
-                    }
-                },
-                new Function1<Integer, Unit>() {
-                    @Override
-                    public Unit invoke(Integer position) {
-                        toggleMessageFlagWithAdapterPosition(position);
-                        return Unit.INSTANCE;
-                    }
-                },
+                this,
                 this.showingThreadedList
         );
 
@@ -1457,14 +1444,16 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         toggleMessageSelectWithAdapterPosition(adapterPosition);
     }
 
-    void toggleMessageFlagWithAdapterPosition(int adapterPosition) {
+    @Override
+    public void toggleMessageFlagWithAdapterPosition(int adapterPosition) {
         Cursor cursor = (Cursor) adapter.getItem(adapterPosition);
         boolean flagged = (cursor.getInt(FLAGGED_COLUMN) == 1);
 
         setFlag(adapterPosition,Flag.FLAGGED, !flagged);
     }
 
-    void toggleMessageSelectWithAdapterPosition(int adapterPosition) {
+    @Override
+    public void toggleMessageSelectWithAdapterPosition(int adapterPosition) {
         Cursor cursor = (Cursor) adapter.getItem(adapterPosition);
         long uniqueId = cursor.getLong(uniqueIdColumn);
 
