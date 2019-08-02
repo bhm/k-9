@@ -63,7 +63,6 @@ import com.fsck.k9.activity.misc.ContactPicture;
 import com.fsck.k9.cache.EmailProviderCache;
 import com.fsck.k9.controller.MessageReference;
 import com.fsck.k9.controller.MessagingController;
-import com.fsck.k9.core.BuildConfig;
 import com.fsck.k9.ui.R;
 import com.fsck.k9.fragment.ConfirmationDialogFragment.ConfirmationDialogFragmentListener;
 import com.fsck.k9.fragment.MessageListFragmentComparators.ArrivalComparator;
@@ -93,8 +92,6 @@ import com.fsck.k9.search.SearchSpecification;
 import com.fsck.k9.search.SearchSpecification.SearchCondition;
 import com.fsck.k9.search.SearchSpecification.SearchField;
 import com.fsck.k9.search.SqlQueryBuilder;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 import com.fsck.k9.ui.messagelist.MessageListAppearance;
 import timber.log.Timber;
 
