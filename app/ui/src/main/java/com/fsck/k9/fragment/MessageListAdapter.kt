@@ -36,7 +36,6 @@ import com.fsck.k9.fragment.MLFProjectionInfo.PREVIEW_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.PREVIEW_TYPE_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.READ_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.SENDER_LIST_COLUMN
-import com.fsck.k9.fragment.MLFProjectionInfo.SUBJECT_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.THREAD_COUNT_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.TO_LIST_COLUMN
 import com.fsck.k9.fragment.MLFProjectionInfo.UID_COLUMN
@@ -149,7 +148,7 @@ class MessageListAdapter internal constructor(
         holder.flagged.setOnClickListener(holder)
 
         view.tag = holder
-        view.setTag(EXTRACTOR, MessageListItemExtractor(cursor))
+        view.setTag(EXTRACTOR, MessageListItemExtractor(cursor, res))
 
         return view
     }
@@ -174,8 +173,7 @@ class MessageListAdapter internal constructor(
 
         val threadCount = if (appearance.showingThreadedList) cursor.getInt(THREAD_COUNT_COLUMN) else 0
 
-        val subject = MlfUtils.buildSubject(cursor.getString(SUBJECT_COLUMN),
-                res.getString(R.string.general_no_subject), threadCount)
+        val subject = itemExtractor.subject(threadCount)
 
         val read = cursor.getInt(READ_COLUMN) == 1
         val flagged = cursor.getInt(FLAGGED_COLUMN) == 1
