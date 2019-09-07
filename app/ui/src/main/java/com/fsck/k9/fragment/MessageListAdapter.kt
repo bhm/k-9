@@ -19,12 +19,10 @@ import android.widget.CursorAdapter
 import android.widget.TextView
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
-import com.fsck.k9.Account
 import com.fsck.k9.FontSizes
 import com.fsck.k9.Preferences
 import com.fsck.k9.contacts.ContactPictureLoader
 import com.fsck.k9.controller.MessageReference
-import com.fsck.k9.fragment.MLFProjectionInfo.ACCOUNT_UUID_COLUMN
 import com.fsck.k9.helper.MessageHelper
 import com.fsck.k9.mail.Address
 import com.fsck.k9.ui.ContactBadge
@@ -119,7 +117,6 @@ class MessageListAdapter internal constructor(
     }
 
     override fun bindView(view: View, context: Context, cursor: Cursor) {
-        val account = getAccount(cursor)
         val itemExtractor = getExtractor(view, cursor)
 
         val displayName = itemExtractor.displayName
@@ -142,7 +139,7 @@ class MessageListAdapter internal constructor(
 
         if (appearance.showAccountChip) {
             val accountChipDrawable = holder.chip.drawable.mutate()
-            DrawableCompat.setTint(accountChipDrawable, account.chipColor)
+            DrawableCompat.setTint(accountChipDrawable, itemExtractor.chipColor)
             holder.chip.setImageDrawable(accountChipDrawable)
         }
 
@@ -192,16 +189,11 @@ class MessageListAdapter internal constructor(
     private fun getExtractor(view: View, cursor: Cursor): MessageListItemExtractor {
         if (view.getTag(EXTRACTOR) == null
                 || (view.getTag(EXTRACTOR) as MessageListItemExtractor).cursor != cursor) {
-            val extractor = MessageListItemExtractor(getAccount(cursor), cursor, messageHelper, res)
+            val extractor = MessageListItemExtractor(preferences, cursor, messageHelper, res)
             view.setTag(EXTRACTOR, extractor)
             return extractor
         }
         return view.getTag(EXTRACTOR) as MessageListItemExtractor
-    }
-
-    private fun getAccount(cursor: Cursor): Account {
-        val accountUuid = cursor.getString(ACCOUNT_UUID_COLUMN)
-        return preferences.getAccount(accountUuid)
     }
 
     private fun formatPreviewText(
