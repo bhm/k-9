@@ -149,12 +149,14 @@ class MessageListAdapter internal constructor(
         holder.flagged.setOnClickListener(holder)
 
         view.tag = holder
+        view.setTag(EXTRACTOR, MessageListItemExtractor(cursor))
 
         return view
     }
 
     override fun bindView(view: View, context: Context, cursor: Cursor) {
         val account = getAccount(cursor)
+        val itemExtractor = view.getTag(EXTRACTOR) as MessageListItemExtractor
 
         val fromList = cursor.getString(SENDER_LIST_COLUMN)
         val toList = cursor.getString(TO_LIST_COLUMN)
@@ -381,6 +383,10 @@ class MessageListAdapter internal constructor(
         }
 
         throw AssertionError("Unknown preview type: $previewType")
+    }
+
+    companion object {
+        private val EXTRACTOR = R.id.message_list_item_extractor
     }
 }
 
