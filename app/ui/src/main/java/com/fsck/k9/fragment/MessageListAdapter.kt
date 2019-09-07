@@ -110,16 +110,6 @@ class MessageListAdapter internal constructor(
             appearance.fontSizes.messageListSubject
         }
 
-    private fun recipientSigil(toMe: Boolean, ccMe: Boolean): String {
-        return if (toMe) {
-            res.getString(R.string.messagelist_sent_to_me_sigil)
-        } else if (ccMe) {
-            res.getString(R.string.messagelist_sent_cc_me_sigil)
-        } else {
-            ""
-        }
-    }
-
     override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
         val view = layoutInflater.inflate(R.layout.message_list_item, parent, false)
 
@@ -141,12 +131,7 @@ class MessageListAdapter internal constructor(
         holder.flagged.setOnClickListener(holder)
 
         view.tag = holder
-        view.setTag(EXTRACTOR, MessageListItemExtractor(
-                getAccount(cursor),
-                cursor,
-                messageHelper,
-                res
-        ))
+        view.setTag(EXTRACTOR, MessageListItemExtractor(getAccount(cursor), cursor, messageHelper, res))
 
         return view
     }
@@ -160,8 +145,6 @@ class MessageListAdapter internal constructor(
         val ccAddrs = itemExtractor.ccAddresses
 
         val fromMe = messageHelper.toMe(account, fromAddrs)
-        val toMe = messageHelper.toMe(account, toAddrs)
-        val ccMe = messageHelper.toMe(account, ccAddrs)
 
         val displayName = itemExtractor.displayName
         val displayDate = DateUtils.getRelativeTimeSpanString(context, itemExtractor.date)
@@ -200,7 +183,7 @@ class MessageListAdapter internal constructor(
         }
         updateWithThreadCount(holder, threadCount)
         val beforePreviewText = if (appearance.senderAboveSubject) subject else displayName
-        val sigil = recipientSigil(toMe, ccMe)
+        val sigil = itemExtractor.sigil
         val messageStringBuilder = SpannableStringBuilder(sigil)
                 .append(beforePreviewText)
         if (appearance.previewLines > 0) {
