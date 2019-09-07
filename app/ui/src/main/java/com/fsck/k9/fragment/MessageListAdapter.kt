@@ -120,10 +120,8 @@ class MessageListAdapter internal constructor(
         val itemExtractor = getExtractor(view, cursor)
         val holder = view.tag as MessageViewHolder
 
-        val displayName = itemExtractor.displayName
         val displayDate = DateUtils.getRelativeTimeSpanString(context, itemExtractor.date)
         val threadCount = if (appearance.showingThreadedList) itemExtractor.threadCount else 0
-        val subject = itemExtractor.subject(threadCount)
         val read = itemExtractor.read
         val answered = itemExtractor.answered
         val forwarded = itemExtractor.forwarded
@@ -152,23 +150,13 @@ class MessageListAdapter internal constructor(
             holder.threadCount.text = "%d".format(threadCount)
         }
 
-        val beforePreviewText = if (appearance.senderAboveSubject) subject else displayName
-        val sigil = itemExtractor.sigil
-        val messageStringBuilder = SpannableStringBuilder(sigil)
-                .append(beforePreviewText)
-        if (appearance.previewLines > 0) {
-            val preview = itemExtractor.preview
-            messageStringBuilder.append(" ").append(preview)
-        }
-        holder.preview.setText(messageStringBuilder, TextView.BufferType.SPANNABLE)
-
-        formatPreviewText(holder.preview, beforePreviewText, sigil)
+        setPreview(itemExtractor, holder, threadCount)
 
         holder.subject.typeface = Typeface.create(holder.subject.typeface, maybeBoldTypeface)
         if (appearance.senderAboveSubject) {
-            holder.subject.text = displayName
+            holder.subject.text = itemExtractor.displayName
         } else {
-            holder.subject.text = subject
+            holder.subject.text = itemExtractor.subject(threadCount)
         }
 
         holder.date.text = displayDate
@@ -190,26 +178,45 @@ class MessageListAdapter internal constructor(
         return view.getTag(EXTRACTOR) as MessageListItemExtractor
     }
 
-    private fun formatPreviewText(
-            preview: TextView,
-            beforePreviewText: CharSequence,
-            sigil: String
-    ) {
-        val previewText = preview.text as Spannable
+    private fun setPreview(itemExtractor: MessageListItemExtractor, holder: MessageViewHolder,
+                           threadCount: Int) {
+        val previewBuilder = getPreviewBuilder(itemExtractor, threadCount)
+        val previewStartingLength = previewBuilder.toString().length
 
-        val beforePreviewLength = beforePreviewText.length + sigil.length
-        addBeforePreviewSpan(previewText, beforePreviewLength)
+        if (appearance.previewLines > 0) {
+            previewBuilder.append(" ").append(itemExtractor.preview)
+        }
 
-        // Set span (color) for preview message
-        previewText.setSpan(
+        val fullPreview = previewBuilder.toString()
+        holder.preview.setText(fullPreview, TextView.BufferType.SPANNABLE)
+        val previewSpannable = (holder.preview.text as Spannable)
+
+        setPreviewStartingSpan(previewSpannable, previewStartingLength)
+        setRemainingSpannable(previewSpannable, previewStartingLength, fullPreview)
+    }
+
+    private fun setRemainingSpannable(previewSpannable: Spannable, previewStartingLength: Int,
+                                      fullPreview: String) {
+        previewSpannable.setSpan(
                 ForegroundColorSpan(previewTextColor),
-                beforePreviewLength,
-                previewText.length,
+                previewStartingLength,
+                fullPreview.length,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
     }
 
-    private fun addBeforePreviewSpan(text: Spannable, length: Int) {
+    private fun getPreviewBuilder(itemExtractor: MessageListItemExtractor,
+                                  threadCount: Int): SpannableStringBuilder {
+        val sigil = itemExtractor.sigil
+        val previewPrefix = if (appearance.senderAboveSubject) {
+            itemExtractor.subject(threadCount)
+        } else {
+            itemExtractor.displayName
+        }
+        return SpannableStringBuilder(sigil).append(previewPrefix)
+    }
+
+    private fun setPreviewStartingSpan(text: Spannable, length: Int) {
         val fontSize = if (appearance.senderAboveSubject) {
             appearance.fontSizes.messageListSubject
         } else {
