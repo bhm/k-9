@@ -1549,9 +1549,8 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         Account account = item.getAccount();
 
         if (showingThreadedList && item.getThreadCount() > 1) {
-            long threadRootId = cursor.getLong(THREAD_ROOT_COLUMN);
             messagingController.setFlagForThreads(account,
-                    Collections.singletonList(threadRootId), flag, newState);
+                    Collections.singletonList(item.getThreadId()), flag, newState);
         } else {
             final long id = item.getId();
             messagingController.setFlag(account, Collections.singletonList(id), flag,
@@ -1585,7 +1584,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
                         threadMap.put(account, threadRootIdList);
                     }
 
-                    threadRootIdList.add(cursor.getLong(THREAD_ROOT_COLUMN));
+                    threadRootIdList.add(item.getThreadId());
                 } else {
                     List<Long> messageIdList = messageMap.get(account);
                     if (messageIdList == null) {
