@@ -97,7 +97,6 @@ import com.fsck.k9.ui.messagelist.ConvertedMessagesReady;
 import com.fsck.k9.ui.messagelist.CursorToMessageListItems;
 import com.fsck.k9.ui.messagelist.MessageListAppearance;
 import com.fsck.k9.ui.messagelist.MessageListItem;
-import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 import timber.log.Timber;
 
@@ -239,8 +238,6 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
      * The value of this field is {@code 0} when no context menu is currently open.
      */
     private long contextMenuUniqueId = 0;
-
-
 
 
     /**
@@ -1556,7 +1553,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
             messagingController.setFlagForThreads(account,
                     Collections.singletonList(threadRootId), flag, newState);
         } else {
-            long id = cursor.getLong(ID_COLUMN);
+            final long id = item.getId();
             messagingController.setFlag(account, Collections.singletonList(id), flag,
                     newState);
         }
@@ -1596,7 +1593,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
                         messageMap.put(account, messageIdList);
                     }
 
-                    messageIdList.add(cursor.getLong(ID_COLUMN));
+                    messageIdList.add(item.getId());
                 }
             }
         }
@@ -2230,7 +2227,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
 
         final String accountUuid = item.getAccount().getUuid();
         final String folderServerId = item.getFolderServerId();
-        final String messageUid = item.getUid();
+        final String messageUid = item.getMessageUid();
         return new MessageReference(accountUuid, folderServerId, messageUid, null);
     }
 
@@ -2257,7 +2254,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
 
             final String accountUuid = item.getAccount().getUuid();
             final String folderServerId = item.getFolderServerId();
-            final String messageUid = item.getUid();
+            final String messageUid = item.getMessageUid();
 
             if (accountUuid.equals(messageReference.getAccountUuid()) &&
                     folderServerId.equals(messageReference.getFolderServerId()) &&
@@ -2323,7 +2320,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
 
         final String accountUuid = item.getAccount().getUuid();
         final String folderServerId = item.getFolderServerId();
-        final String messageUid = item.getUid();
+        final String messageUid = item.getMessageUid();
 
         return new MessageReference(accountUuid, folderServerId, messageUid, null);
     }
@@ -2369,9 +2366,8 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
             return;
         }
 
-        Cursor cursor = (Cursor) adapter.getItem(adapterPosition);
-        boolean flagState = (cursor.getInt(flagColumn) == 1);
-        setFlag(adapterPosition, flag, !flagState);
+        final MessageListItem item = adapter.getItem(adapterPosition);
+        setFlag(adapterPosition, flag, !item.getFlagged());
     }
 
     public void onMove() {
