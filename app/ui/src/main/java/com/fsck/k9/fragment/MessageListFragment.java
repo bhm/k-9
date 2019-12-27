@@ -75,7 +75,6 @@ import com.fsck.k9.fragment.MessageListFragmentComparators.ReverseIdComparator;
 import com.fsck.k9.fragment.MessageListFragmentComparators.SenderComparator;
 import com.fsck.k9.fragment.MessageListFragmentComparators.SubjectComparator;
 import com.fsck.k9.fragment.MessageListFragmentComparators.UnreadComparator;
-import com.fsck.k9.helper.MergeCursorWithUniqueId;
 import com.fsck.k9.helper.MessageHelper;
 import com.fsck.k9.helper.Utility;
 import com.fsck.k9.mail.Address;
@@ -95,13 +94,13 @@ import com.fsck.k9.search.SearchSpecification.SearchField;
 import com.fsck.k9.search.SqlQueryBuilder;
 import com.fsck.k9.ui.messagelist.ConvertedMessagesReady;
 import com.fsck.k9.ui.messagelist.CursorToMessageListItems;
+import com.fsck.k9.ui.messagelist.CursorsAccumulator;
 import com.fsck.k9.ui.messagelist.MessageListAppearance;
 import com.fsck.k9.ui.messagelist.MessageListItem;
 import org.jetbrains.annotations.NotNull;
 import timber.log.Timber;
 
 import static com.fsck.k9.Account.Expunge.EXPUNGE_MANUALLY;
-import static com.fsck.k9.fragment.MLFProjectionInfo.ACCOUNT_UUID_COLUMN;
 import static com.fsck.k9.fragment.MLFProjectionInfo.ID_COLUMN;
 import static com.fsck.k9.fragment.MLFProjectionInfo.PROJECTION;
 import static com.fsck.k9.fragment.MLFProjectionInfo.THREADED_PROJECTION;
@@ -170,7 +169,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
     private Account account;
     private String[] accountUuids;
 
-    private Cursor[] cursors;
+    private CursorsAccumulator cursors;
     private boolean[] cursorValid;
     private int uniqueIdColumn;
 
@@ -438,7 +437,7 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         loaderJustInitialized = true;
         LoaderManager loaderManager = getLoaderManager();
         int len = accountUuids.length;
-        cursors = new Cursor[len];
+        cursors = new CursorsAccumulator(accountUuids);
         cursorValid = new boolean[len];
         for (int i = 0; i < len; i++) {
             loaderManager.initLoader(i, null, this);
@@ -2556,15 +2555,14 @@ public class MessageListFragment extends Fragment implements OnItemClickListener
         swipeRefreshLayout.setEnabled(isPullToRefreshAllowed());
 
         final int loaderId = loader.getId();
-        cursors[loaderId] = data;
         cursorValid[loaderId] = true;
+        cursors.add(data);
 
-        final Cursor cursor;
-        if (cursors.length > 1) {
-            cursor = new MergeCursorWithUniqueId(cursors, getComparator());
+        final Cursor cursor = cursors.all(getComparator());
+
+        if (cursors.isMerged() ) {
             uniqueIdColumn = cursor.getColumnIndex("_id");
         } else {
-            cursor = data;
             uniqueIdColumn = ID_COLUMN;
         }
         new CursorToMessageListItems(
